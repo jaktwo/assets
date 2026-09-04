@@ -1,0 +1,35 @@
+name: Update Codeberg Submodule
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone Codeberg repo
+        run: |
+          git clone --recurse-submodules \
+            https://oauth2:${{ secrets.CODEBERG_TOKEN }}@codeberg.org/backspc3/soloonar.git \
+            game-code
+
+      - name: Update submodule and push
+        working-directory: game-code
+        run: |
+          git config user.name "Assets Bot"
+          git config user.email "bot@example.com"
+          
+          git checkout main
+          git pull origin main
+          
+          # Update submodule to latest commit on its tracked branch
+          git submodule update --remote
+          
+          # Stage only the submodule pointer change
+          git add assets
+          
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: update assets submodule to latest"
+            git push origin main
+          fi
